@@ -1,0 +1,133 @@
+apiVersion: apps.dominodatalab.com/v1alpha1
+kind: Mutation
+metadata:
+  name: irsa
+  namespace: domino-platform
+rules:
+- labelSelectors:
+  - app.kubernetes.io/name in (spark,ray,dask)
+  - "dominodatalab.com/workload-type in (Workspace,Batch,Scheduled)"
+  - "dominodatalab.com/project-name==irsa-enablement"
+  matchBuilds: false
+  modifyLabel:
+    key: dominodatalab.com/workload-type
+    value: cluster
+- labelSelectors:
+  - "dominodatalab.com/workload-type in (Workspace,Batch,Scheduled)"
+  - "dominodatalab.com/project-name==irsa-enablement"
+  matchBuilds: false
+  modifySecurityContext:
+    context:
+      fsGroup: 12574
+- insertContainer:
+    containerType: app
+    spec:
+      image: quay.io/domino/irsa-client:v1.0.0-release
+      imagePullPolicy: Always
+      name: aws-config-file-generator
+  labelSelectors:
+  - "dominodatalab.com/workload-type in (Workspace,Batch,Scheduled)"
+  - "dominodatalab.com/project-name==irsa-enablement"
+  matchBuilds: false
+- insertVolumeMounts:
+    containerSelector:
+    - aws-config-file-generator
+    volumeMounts:
+    - mountPath: /var/run/podinfo
+      name: podinfo
+      readOnly: true
+    - mountPath: /var/log/irsa
+      name: irsa-logs
+  labelSelectors:
+  - "dominodatalab.com/workload-type in (Workspace,Batch,Scheduled)"
+  - dominodatalab.com/project-name==irsa-enablement
+  matchBuilds: false
+- insertVolumes:
+  - emptyDir:
+      sizeLimit: 1000Mi
+    name: irsa-logs
+  - emptyDir:
+      sizeLimit: 500Mi
+    name: aws-config-file
+  - downwardAPI:
+      items:
+      - fieldRef:
+          fieldPath: metadata.labels
+        path: labels
+    name: podinfo
+  - name: aws-user-token
+    projected:
+      defaultMode: 422
+      sources:
+      - serviceAccountToken:
+          audience: sts.amazonaws.com
+          expirationSeconds: 86400
+          path: token
+  labelSelectors:
+  - "dominodatalab.com/workload-type in (Workspace,Batch,Scheduled)"
+  - "dominodatalab.com/project-name==irsa-enablement"
+  matchBuilds: false
+- insertVolumeMounts:
+    containerSelector:
+    - run
+    volumeMounts:
+    - mountPath: /var/run/.aws
+      name: aws-config-file
+    - mountPath: /var/run/secrets/eks.amazonaws.com/serviceaccount/
+      name: aws-user-token
+      readOnly: true
+    - mountPath: /var/log/irsa
+      name: irsa-logs
+      readOnly: true
+    - mountPath: /var/run/podinfo
+      name: podinfo
+      readOnly: true
+  labelSelectors:
+  - "dominodatalab.com/workload-type in (Workspace,Batch,Scheduled)"
+  - "dominodatalab.com/project-name==irsa-enablement"
+  matchBuilds: false
+- insertVolumeMounts:
+    containerSelector:
+    - aws-config-file-generator
+    volumeMounts:
+    - mountPath: /var/run/.aws
+      name: aws-config-file
+    - mountPath: /var/run/secrets/eks.amazonaws.com/serviceaccount/
+      name: aws-user-token
+      readOnly: true
+    - mountPath: /var/run/podinfo
+      name: podinfo
+      readOnly: true
+  labelSelectors:
+  - "dominodatalab.com/workload-type in (Workspace,Batch,Scheduled)"
+  - "dominodatalab.com/project-name==irsa-enablement"
+  matchBuilds: false
+- labelSelectors:
+  - "dominodatalab.com/workload-type in (Workspace,Batch,Scheduled)"
+  - "dominodatalab.com/project-name==irsa-enablement"
+  matchBuilds: false
+  modifyEnv:
+    containerSelector:
+    - aws-config-file-generator
+    env:
+    - name: POD_INFO_PATH
+      value: /var/run/podinfo/labels
+    - name: DOMINO_API_PROXY
+      value: http://localhost:8899
+- labelSelectors:
+  - "dominodatalab.com/workload-type in (Workspace,Batch,Scheduled)"
+  - "dominodatalab.com/project-name==irsa-enablement"
+  matchBuilds: false
+  modifyEnv:
+    containerSelector:
+    - run
+    - aws-config-file-generator
+    env:
+    - name: AWS_WEB_IDENTITY_TOKEN_FILE
+      value: /var/run/secrets/eks.amazonaws.com/serviceaccount/token
+    - name: AWS_CONFIG_FILE
+      value: /var/run/.aws/config
+    - name: DOMINO_IRSA_ENDPOINT
+      value: http://irsa-svc.domino-field/map_iam_roles_to_pod_sa
+    - name: DOMINO_API_PROXY
+      value: http://localhost:8899

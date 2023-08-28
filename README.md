@@ -167,4 +167,69 @@ resp = requests.post(endpoint,headers=headers,json=body,verify=False)
 
 ```
 
-Walk through this notebook to get an end to end walkthrough on how to use IRSA for Domino
+Walk through this notebook to get an end to end walkthrough on how to use IRSA for Domino.
+
+An example mapping in the configmap `domino-org-iamrole-mapping` in `domino-field` namespace is shown below:
+
+The AWS Account number is `111111111111` and the actual roles `list-bucket-role`, `read-bucket-role` and 
+`update-bucket-role` are mapped via proxy roles `acme-list-bucket-role`, `acme-read-bucket-role` and 
+`acme-update-bucket-role` in the same account. Note that the actual roles and proxy roles can be in separate accounts
+
+
+```yaml
+apiVersion: v1
+data:
+  irsa-iamrole-list-bucket: '{"iam_role_arn": "arn:aws:iam::111111111111:role/list-bucket-role",
+    "proxy_iam_role_arn": "arn:aws:iam::111111111111:role/acme-list-bucket-role"}'
+  irsa-iamrole-read-bucket: '{"iam_role_arn": "arn:aws:iam::111111111111:role/read-bucket-role",
+    "proxy_iam_role_arn": "arn:aws:iam::111111111111:role/acme-read-bucket-role"}'
+  irsa-iamrole-update-bucket: '{"iam_role_arn": "arn:aws:iam::111111111111:role/update-bucket-role",
+    "proxy_iam_role_arn": "arn:aws:iam::946429944765:role/acme-update-bucket-role"}'
+kind: ConfigMap
+metadata:
+  annotations:
+    meta.helm.sh/release-name: irsa
+    meta.helm.sh/release-namespace: domino-field  
+  name: domino-org-iamrole-mapping
+  namespace: domino-field
+```
+
+## Scaling
+
+Each time a workload starts up the proxy role trust relationship is updated with the service account for the workload.
+The maximum size of a trust policy document is 4096 characters (after requesting AWS to increase it. Default is 2048).
+
+If you need more you will need to create additional domino-orgs and map the same role to a new proxy role. For example 
+the above configmap would like the following:
+
+```yaml
+apiVersion: v1
+data:
+  irsa-iamrole-list-bucket: '{"iam_role_arn": "arn:aws:iam::111111111111:role/list-bucket-role",
+    "proxy_iam_role_arn": "arn:aws:iam::111111111111:role/acme-list-bucket-role"}'
+  irsa-iamrole-list-bucket-2: '{"iam_role_arn": "arn:aws:iam::111111111111:role/list-bucket-role",
+    "proxy_iam_role_arn": "arn:aws:iam::111111111111:role/acme-list-bucket-role-2"}'
+  irsa-iamrole-read-bucket: '{"iam_role_arn": "arn:aws:iam::111111111111:role/read-bucket-role",
+    "proxy_iam_role_arn": "arn:aws:iam::111111111111:role/acme-read-bucket-role"}'
+  irsa-iamrole-update-bucket: '{"iam_role_arn": "arn:aws:iam::111111111111:role/update-bucket-role",
+    "proxy_iam_role_arn": "arn:aws:iam::946429944765:role/acme-update-bucket-role"}'
+kind: ConfigMap
+metadata:
+  annotations:
+    meta.helm.sh/release-name: irsa
+    meta.helm.sh/release-namespace: domino-field  
+  name: domino-org-iamrole-mapping
+  namespace: domino-field
+```
+
+We have added a new domino org `irsa-iamrole-list-bucket-2` and created a new proxy role `arn:aws:iam::111111111111:role/acme-list-bucket-role-2`
+for the aws role `iam_role_arn": "arn:aws:iam::111111111111:role/list-bucket-role`.
+
+Next redistribute the users added to domino org `irsa-iamrole-list-bucket` between the two orgs-
+- `irsa-iamrole-list-bucket`
+- `irsa-iamrole-list-bucket-2`
+
+You scale with multiple mappings for the same role in this fashion. This allows the Domino-IRSA solution to scale to
+a large number of simultaneous domino workloads despite each workload having a unique k8s service account.
+
+The mappings are deleted when the workload ends.

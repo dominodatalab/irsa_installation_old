@@ -15,16 +15,6 @@ rules:
   modifySecurityContext:
     context:
       fsGroup: 12574
-- labelSelectors:
-  - "dominodatalab.com/workload-type in (Workspace,Batch,Scheduled)"
-  insertContainer:
-    containerType: app
-    spec:
-      image: "{{ .Values.image.repository }}/{{ .Values.image.clientContainer }}:{{ .Values.image.clientAppVersion }}"
-      name: aws-config-file-generator
-      imagePullPolicy: Always
-- labelSelectors:
-  - "dominodatalab.com/workload-type in (Workspace,Batch,Scheduled)"
   insertVolumes:
   - name: irsa-ssl-certs
     secret:
@@ -51,27 +41,20 @@ rules:
           audience: sts.amazonaws.com
 - labelSelectors:
   - "dominodatalab.com/workload-type in (Workspace,Batch,Scheduled)"
-  insertVolumeMounts:
+  insertContainer:
+    containerType: app
+    spec:
+      image: "{{ .Values.image.repository }}/{{ .Values.image.clientContainer }}:{{ .Values.image.clientAppVersion }}"
+      name: aws-config-file-generator
+      imagePullPolicy: Always
+  modifyEnv:
     containerSelector:
-    - run
-    volumeMounts:
-    - name: aws-config-file
-      mountPath: /var/run/.aws
-      readOnly: true
-    - name: aws-user-token
-      mountPath: /var/run/secrets/eks.amazonaws.com/serviceaccount/
-      readOnly: true
-    - name: irsa-logs
-      mountPath: /var/log/irsa
-      readOnly: true
-    - name: podinfo
-      mountPath: /var/run/podinfo
-      readOnly: true
-    - name: irsa-ssl-certs
-      mountPath: /etc/ssl/certs/irsa
-      readOnly: true
-- labelSelectors:
-  - "dominodatalab.com/workload-type in (Workspace,Batch,Scheduled)"
+      - aws-config-file-generator
+    env:
+      - name: POD_INFO_PATH
+        value: /var/run/podinfo/labels
+      - name: DOMINO_API_PROXY
+        value: http://localhost:8899
   insertVolumeMounts:
     containerSelector:
     - aws-config-file-generator
@@ -91,16 +74,25 @@ rules:
       readOnly: true
 - labelSelectors:
   - "dominodatalab.com/workload-type in (Workspace,Batch,Scheduled)"
-  modifyEnv:
+  insertVolumeMounts:
     containerSelector:
-      - aws-config-file-generator
-    env:
-      - name: POD_INFO_PATH
-        value: /var/run/podinfo/labels
-      - name: DOMINO_API_PROXY
-        value: http://localhost:8899
-- labelSelectors:
-  - "dominodatalab.com/workload-type in (Workspace,Batch,Scheduled)"
+      - run
+    volumeMounts:
+      - name: aws-config-file
+        mountPath: /var/run/.aws
+        readOnly: true
+      - name: aws-user-token
+        mountPath: /var/run/secrets/eks.amazonaws.com/serviceaccount/
+        readOnly: true
+      - name: irsa-logs
+        mountPath: /var/log/irsa
+        readOnly: true
+      - name: podinfo
+        mountPath: /var/run/podinfo
+        readOnly: true
+      - name: irsa-ssl-certs
+        mountPath: /etc/ssl/certs/irsa
+        readOnly: true
   modifyEnv:
     containerSelector:
     - run

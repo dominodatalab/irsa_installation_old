@@ -15,7 +15,7 @@ kubectl label namespace ${compute_namespace} operator-enabled=true
 ```
 
 
-### Install Domsed
+### Delete Domsed
 ```shell
 export platform_namespace=domino-platform
 export compute_namespace=domino-compute

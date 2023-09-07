@@ -75,9 +75,10 @@ EOF
 kubectl -n ${compute_namespace} describe pod busybox
 ```
 
-- Delete the pod has a new label
+- Delete the test pod and mutation
 ```shell
 kubectl -n ${compute_namespace} delete pod busybox
+kubectl -n ${platform_namespace} delete mutation label
 ```
 
 ## IRSA For Domino

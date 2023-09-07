@@ -8,13 +8,10 @@ rules:
   - app.kubernetes.io/name in (spark,ray,dask)
   matchBuilds: false
   modifyLabel:
-    key: dominodatalab.com/workload-type
+    key: dominodatalab.com/cluster-workload-type
     value: cluster
 - labelSelectors:
   - "dominodatalab.com/workload-type in (Workspace,Batch,Scheduled)"
-  modifySecurityContext:
-    context:
-      fsGroup: 12574
   insertVolumes:
   - name: irsa-ssl-certs
     secret:
@@ -39,32 +36,49 @@ rules:
           path: token
           expirationSeconds: 86400
           audience: sts.amazonaws.com
-- labelSelectors:
-  - "dominodatalab.com/workload-type in (Workspace,Batch,Scheduled)"
+  modifySecurityContext:
+    context:
+      fsGroup: 12574
   insertContainer:
     containerType: app
     spec:
       image: "{{ .Values.image.repository }}/{{ .Values.image.clientContainer }}:{{ .Values.image.clientAppVersion }}"
       name: aws-config-file-generator
       imagePullPolicy: Always
-  modifyEnv:
-    containerSelector:
-      - aws-config-file-generator
-    env:
-      - name: POD_INFO_PATH
-        value: /var/run/podinfo/labels
-      - name: DOMINO_API_PROXY
-        value: http://localhost:8899
+      volumeMounts:
+        - name: aws-config-file
+          mountPath: /var/run/.aws
+        - name: irsa-logs
+          mountPath: /var/log/irsa
+        - name: aws-user-token
+          mountPath: /var/run/secrets/eks.amazonaws.com/serviceaccount/
+          readOnly: true
+        - name: podinfo
+          mountPath: /var/run/podinfo
+          readOnly: true
+        - name: irsa-ssl-certs
+          mountPath: /etc/ssl/certs/irsa
+          readOnly: true
+      env:
+        - name: POD_INFO_PATH
+          value: /var/run/podinfo/labels
+        - name: DOMINO_API_PROXY
+          value: http://localhost:8899
+
+- labelSelectors:
+  - "dominodatalab.com/workload-type in (Workspace,Batch,Scheduled)"
   insertVolumeMounts:
     containerSelector:
-    - aws-config-file-generator
+    - run
     volumeMounts:
     - name: aws-config-file
       mountPath: /var/run/.aws
-    - name: irsa-logs
-      mountPath: /var/log/irsa
+      readOnly: true
     - name: aws-user-token
       mountPath: /var/run/secrets/eks.amazonaws.com/serviceaccount/
+      readOnly: true
+    - name: irsa-logs
+      mountPath: /var/log/irsa
       readOnly: true
     - name: podinfo
       mountPath: /var/run/podinfo
@@ -72,27 +86,6 @@ rules:
     - name: irsa-ssl-certs
       mountPath: /etc/ssl/certs/irsa
       readOnly: true
-- labelSelectors:
-  - "dominodatalab.com/workload-type in (Workspace,Batch,Scheduled)"
-  insertVolumeMounts:
-    containerSelector:
-      - run
-    volumeMounts:
-      - name: aws-config-file
-        mountPath: /var/run/.aws
-        readOnly: true
-      - name: aws-user-token
-        mountPath: /var/run/secrets/eks.amazonaws.com/serviceaccount/
-        readOnly: true
-      - name: irsa-logs
-        mountPath: /var/log/irsa
-        readOnly: true
-      - name: podinfo
-        mountPath: /var/run/podinfo
-        readOnly: true
-      - name: irsa-ssl-certs
-        mountPath: /etc/ssl/certs/irsa
-        readOnly: true
   modifyEnv:
     containerSelector:
     - run

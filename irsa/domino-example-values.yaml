@@ -8,10 +8,10 @@ image:
 env:
   name: irsa
   service: irsa-svc
-  eks_aws_account: '946429944765'
-  assets_aws_account: '524112250363'
+  eks_aws_account: 'xxx'
+  assets_aws_account: 'yyy'
   eks_service_role_name: acme-irsa-svc-role
-  oidc_provider: oidc.eks.us-west-2.amazonaws.com/id/D24BE61D3A9AFFB8DBACFA731B2B277C
+  oidc_provider: oidc.eks.us-west-2.amazonaws.com/id/zz
   oidc_provider_audience: sts.amazonaws.com
   aws_default_region: us-west-2
   aws_region: us-west-2

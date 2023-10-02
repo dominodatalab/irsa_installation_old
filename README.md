@@ -134,7 +134,7 @@ Open the notebook [enablement.ipynb](./enablement.ipynb). There is a section cal
 This section is used to map Domino Organizations to AWS Roles (and AWS proxy roles)
 ```python
 EKS_ACCOUNT_NO="<ADD>"
-ASSETS_ACCOUNT_NO="<ADD"
+ASSETS_ACCOUNT_NO="<ADD>"
 #Fetch my mappings (Any user can do this)
 import requests
 import os

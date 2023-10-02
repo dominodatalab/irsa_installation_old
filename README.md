@@ -102,6 +102,10 @@ helm delete irsa -n domino-field
 a. First create organizations in domino matching the role names
 
 b. Update the `values.yaml` with the proper values
+```shell
+#Update the values.yaml with the above values
+cd irsa
+```
 
 ```shell
 export eks_aws_account=<eks_aws_account>
@@ -113,8 +117,7 @@ export platform_namespace=domino-platform
 export compute_namespace=domino-compute
 export field_namespace=domino-field
 
-#Update the values.yaml with the above values
-cd irsa
+
 helm install -f ./values.yaml -n ${field_namespace} irsa helm/irsa
 ```
 

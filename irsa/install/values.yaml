@@ -1,0 +1,24 @@
+image:
+  repository: quay.io/domino
+  serverContainer: irsa
+  clientContainer: irsa-client
+  serverAppVersion: v1.1.0-release
+  clientAppVersion: v1.1.0-release
+  pullPolicy: Always
+env:
+  name: irsa
+  service: irsa-svc
+  eks_aws_account: '946429944765'
+  assets_aws_account: '524112250363'
+  eks_service_role_name: acme-irsa-svc-role
+  oidc_provider: oidc.eks.us-west-2.amazonaws.com/id/6377798F9D92DFC7C9C3873B8DA27C68
+  oidc_provider_audience: sts.amazonaws.com
+  aws_default_region: us-west-2
+  aws_region: us-west-2
+  aws_sts_regional_endpoints: regional
+  namespace:
+    platform: domino-platform
+    compute: domino-compute
+    field: domino-field
+istio:
+  enabled: false

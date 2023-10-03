@@ -2,7 +2,9 @@ Domsed/IRSA Installation - AWS Setup
 
 ## Two AWS Accounts
 
-We need two ***logical*** AWS Accounts for this installation. This is a general case. They can be the 
+We need one AWS Role for the IRSA service pod to assume.
+
+And we need two ***logical*** AWS Accounts for this installation. This is a general case. They can be the 
 same ***physical*** AWS Acccount.
 
 `{EKS_AWS_ACCOUNT}` - This is the AWS Account where the EKS cluster hosting Domino is installed

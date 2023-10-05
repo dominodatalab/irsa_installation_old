@@ -95,7 +95,14 @@ kubectl label namespace domino-field  domino-compute=true
 
 ```shell
 helm delete irsa -n domino-field
+export compute_namespace=domino-compute
+kubectl delete secret irsa-certs -n {domino-field }
 ```
+
+
+
+> ***Attention***:  **After reinstalling IRSA you will need to recreate the mappings**
+
 
 ### Install IRSA
 
@@ -108,10 +115,7 @@ cd irsa
 ```
 
 ```shell
-export eks_aws_account=<eks_aws_account>
-export assets_aws_account=<assets_aws_account>
-export eks_service_role_name=<eks_service_role_name>
-export oidc_provider=<oidc_provider>
+
 
 export platform_namespace=domino-platform
 export compute_namespace=domino-compute

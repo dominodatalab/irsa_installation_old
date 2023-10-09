@@ -47,13 +47,12 @@ Trust Relationship:
         {
             "Effect": "Allow",
             "Principal": {
-                "Federated": "arn:aws:iam::{EKS_AWS_ACCOUNT}:oidc-provider/oidc.eks.{EKS_AWS_ACCOUNT_REGION}.amazonaws.com/id/{EKS_OIDC_ID}"
+                "Federated": "arn:aws:iam::{EKS_AWS_ACCOUNT}:oidc-provider/oidc.eks.{EKS_CLUSTER_REGION}.amazonaws.com/id/{EKS_OIDC_ID}"
             },
             "Action": "sts:AssumeRoleWithWebIdentity",
             "Condition": {
                 "StringEquals": {
-                    "oidc.eks.{EKS_AWS_ACCOUNT_REGION}.amazonaws.com/id/{EKS_OIDC_ID}:aud": "sts.amazonaws.com",
-                    "oidc.eks.{EKS_AWS_ACCOUNT_REGION}.amazonaws.com/id/{EKS_OIDC_ID}:sub": "system:serviceaccount:domino-field:irsa"
+                    "oidc.eks.{EKS_CLUSTER_REGION}.amazonaws.com/id/{EKS_OIDC_ID}:sub": "system:serviceaccount:domino-field:irsa"
                 }
             }
         }
@@ -79,13 +78,13 @@ Permission Policy:
                 "iam:PutRolePolicy",
                 "iam:UpdateAssumeRolePolicy"
             ],
-            "Resource": "arn:aws:iam::{EKS_AWS_ACCOUNT_REGION}:role/*"
+            "Resource": "arn:aws:iam::{EKS_AWS_ACCOUNT}:role/*"
         }
     ]
 }
 ```
 
-Note that the `"Resource": "arn:aws:iam::{EKS_AWS_ACCOUNT_REGION}:role/*"` allows this policy to update
+Note that the `"Resource": "arn:aws:iam::{EKS_AWS_ACCOUNT}:role/*"` allows this policy to update
 the policies of any role. You should restrict this to only allow updating the 
 proxy policies of the roles, your domino workloads can assume.
 
@@ -104,13 +103,12 @@ Trust Relationship:
         {
             "Effect": "Allow",
             "Principal": {
-                "Federated": "arn:aws:iam::{EKS_AWS_ACCOUNT}:oidc-provider/oidc.eks.{EKS_AWS_ACCOUNT_REGION}.amazonaws.com/id/{EKS_OIDC_ID}"
+                "Federated": "arn:aws:iam::{EKS_AWS_ACCOUNT}:oidc-provider/oidc.eks.{EKS_CLUSTER_REGION}.amazonaws.com/id/{EKS_OIDC_ID}"
             },
             "Action": "sts:AssumeRoleWithWebIdentity",
             "Condition": {
                 "StringLike": {
-                    "oidc.eks.{EKS_AWS_ACCOUNT_REGION}.amazonaws.com/id/{EKS_OIDC_ID}:sub": "",
-                    "oidc.eks.{EKS_AWS_ACCOUNT_REGION}.amazonaws.com/id/{EKS_OIDC_ID}:aud": "sts.amazonaws.com"
+                    "oidc.eks.{EKS_CLUSTER_REGION}.amazonaws.com/id/{EKS_OIDC_ID}:sub": ""
                 }
             }
         }
@@ -127,7 +125,7 @@ Permission Policy:
         {
             "Effect": "Allow",
             "Action": "sts:AssumeRole",
-            "Resource": "arn:aws:iam::{ASSETS_AWS_ACCOUNT_REGION}:role/{aws-role-name}"
+            "Resource": "arn:aws:iam::{ASSETS_AWS_ACCOUNT}:role/{aws-role-name}"
         }
     ]
 }
@@ -135,7 +133,7 @@ Permission Policy:
 
 #### Workload Role
 
-This is the actual role in the `ASSETS_AWS_ACCOUNT_REGION` corresponding to one or many proxy roles.
+This is the actual role in the `ASSETS_AWS_ACCOUNT` corresponding to one or many proxy roles.
 
 Note that this role can be have many proxy roles. But a proxy role can point to only one such role
 
@@ -150,14 +148,14 @@ Trust Relationship:
         {
             "Effect": "Allow",
             "Principal": {
-                "AWS": "arn:aws:iam::{ASSETS_AWS_ACCOUNT_REGION}:root"
+                "AWS": "arn:aws:iam::{EKS_AWS_ACCOUNT}:root"
             },
             "Action": "sts:AssumeRole"
         }
     ]
 }
 ```
-This trust policy allows any role in the `ASSETS_AWS_ACCOUNT_REGION` to assume itself. You might want to
+This trust policy allows any role in the `EKS_AWS_ACCOUNT` to assume itself. You might want to
 restrict to only a list of corresponding proxy roles permitted to assume itself.
 
 Example Permission Policy:

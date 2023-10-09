@@ -52,8 +52,8 @@ Trust Relationship:
             "Action": "sts:AssumeRoleWithWebIdentity",
             "Condition": {
                 "StringEquals": {
-                    "oidc.eks.{EKS_AWS_ACCOUNT_REGION}.amazonaws.com/id/{EKS_OIDC_ID}:aud": "sts.amazonaws.com",
-                    "oidc.eks.{EKS_AWS_ACCOUNT_REGION}.amazonaws.com/id/{EKS_OIDC_ID}:sub": "system:serviceaccount:domino-field:irsa"
+                    "oidc.eks.{EKS_CLUSTER_REGION}.amazonaws.com/id/{EKS_OIDC_ID}:aud": "sts.amazonaws.com",
+                    "oidc.eks.{EKS_CLUSTER_REGION}.amazonaws.com/id/{EKS_OIDC_ID}:sub": "system:serviceaccount:domino-field:irsa"
                 }
             }
         }
@@ -109,8 +109,8 @@ Trust Relationship:
             "Action": "sts:AssumeRoleWithWebIdentity",
             "Condition": {
                 "StringLike": {
-                    "oidc.eks.{EKS_AWS_ACCOUNT}.amazonaws.com/id/{EKS_OIDC_ID}:sub": "",
-                    "oidc.eks.{EKS_AWS_ACCOUNT}.amazonaws.com/id/{EKS_OIDC_ID}:aud": "sts.amazonaws.com"
+                    "oidc.eks.{EKS_CLUSTER_REGION}.amazonaws.com/id/{EKS_OIDC_ID}:sub": "",
+                    "oidc.eks.{EKS_CLUSTER_REGION}.amazonaws.com/id/{EKS_OIDC_ID}:aud": "sts.amazonaws.com"
                 }
             }
         }

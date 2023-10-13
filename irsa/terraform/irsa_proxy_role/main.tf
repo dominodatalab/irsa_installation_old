@@ -11,29 +11,24 @@ data "aws_iam_policy_document" "irsa-proxy-role-trust-policy" {
         test = "StringLike"
         variable = "${replace(data.aws_eks_cluster.domino-cluster.identity[0].oidc[0].issuer,"https://","")}:sub"
         values = [""]
-      }
-      condition {
-        test = "StringEquals"
-        variable = "${replace(data.aws_eks_cluster.domino-cluster.identity[0].oidc[0].issuer,"https://","")}:aud"
-        values = ["sts.amazonaws.com"]
-      }      
+      }    
     }
 }
 
 resource "aws_iam_role" "domino-irsa-proxy" {
-    name = "${var.irsa-proxy-role-prefix}-${var.irsa-workload-role-name}"
+    name = "${var.irsa-proxy-role-name}"
     assume_role_policy = data.aws_iam_policy_document.irsa-proxy-role-trust-policy.json
 }
 
 data "aws_iam_policy_document" "domino-irsa-proxy-policy" {
     statement {
       actions = ["sts:AssumeRole"]
-      resources = [aws_iam_role.irsa-workload-role.arn]
+      resources = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.irsa-workload-role-path}${var.irsa-workload-role-name}"]
     }
 }
 
 resource "aws_iam_policy" "domino-irsa-proxy-policy" {
-    name = "${var.irsa-proxy-role-prefix}-${var.irsa-workload-role-name}-policy"
+    name = "${var.irsa-proxy-role-name}-policy"
     policy = data.aws_iam_policy_document.domino-irsa-proxy-policy.json
 }
 
